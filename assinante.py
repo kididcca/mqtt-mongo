@@ -1,13 +1,25 @@
 import paho.mqtt.client as mqtt
 from pymongo import MongoClient
 import time
+import os
 
-cliente = MongoClient('mongo')
-db = cliente.arduino
-posts = db.temperatura
+if "MONGO_SERVER" in os.environ:
+    mongo_server = os.environ["MONGO_SERVER"]
+else:
+    mongo_server = 'mongo'
+
+if "MQTT_BROKER" in os.environ:
+    mqtt_broker = os.environ["MQTT_BROKER"]
+else:
+    mqtt_broker = 'mqtt'
+
+if "MQTT_TOPIC" in os.environ:
+    mqtt_topic = os.environ["MQTT_TOPIC"]
+else:
+    mqtt_topic = 'arduino/sensor'
 
 def on_connect(client, userdata, flags, rc):
-    client.subscribe("arduino/ard")
+    client.subscribe(mqtt_topic)
 
 def on_message(client, userdata, msg):
     topico = msg.topic.strip().split('/')
@@ -16,9 +28,10 @@ def on_message(client, userdata, msg):
     valoratual = bytes(msg.payload).decode('utf-8')
     data_atual = time.time()
     post = {'nome': arduino, 'valor': valoratual, 'data': data_atual}
+    print(post)
     post_id = posts.insert_one(post).inserted_id
     dados_recebidos = []
-    dados_recebidos = posts.find({'nome':'arduino'})
+    dados_recebidos = posts.find({'nome':topico[0]})
     saida = open('html/dados.js', 'w')
     saida.write("new Chartist.Line('.ct-chart', {\n")
     saida.write("    series: [\n")
@@ -46,8 +59,12 @@ def on_message(client, userdata, msg):
     saida.write("});\n")
     saida.close()
 
-client = mqtt.Client()
-client.on_connect = on_connect
-client.on_message = on_message
-client.connect("mqtt", 1883, 60)
-client.loop_forever()
+mongo_client = MongoClient(mongo_server)
+db = mongo_client.arduino
+posts = db.temperatura
+
+mqtt_sub = mqtt.Client()
+mqtt_sub.on_connect = on_connect
+mqtt_sub.on_message = on_message
+mqtt_sub.connect(mqtt_broker, 1883, 60)
+mqtt_sub.loop_forever()
