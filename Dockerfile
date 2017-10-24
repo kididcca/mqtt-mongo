@@ -23,7 +23,7 @@ RUN chmod 0755 /docker-entrypoint.sh && \
     chown -R assinante:assinante /assinante && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-COPY assinante.py cron.py /assinante/
+COPY assinante.py /assinante/
 
 WORKDIR "/assinante"
 USER "assinante"
