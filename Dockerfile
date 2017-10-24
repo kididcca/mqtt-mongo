@@ -11,11 +11,10 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.vcs-url="https://github.com/pdm-iot/assinante-mqtt" \
       org.label-schema.vendor="IFSC" \
-      org.label-schema.version="0.1" \
+      org.label-schema.version="0.2" \
       org.label-schema.schema-version="1.0"
 
-COPY docker-entrypoint.sh /
-COPY requirements.txt /
+COPY docker-entrypoint.sh requirements.txt /
 RUN chmod 0755 /docker-entrypoint.sh && \
     pip install -r /requirements.txt && \
     groupadd assinante && \
@@ -24,7 +23,7 @@ RUN chmod 0755 /docker-entrypoint.sh && \
     chown -R assinante:assinante /assinante && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-COPY assinante.py /assinante/
+COPY assinante.py cron.py /assinante/
 
 WORKDIR "/assinante"
 USER "assinante"
